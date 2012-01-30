@@ -23,19 +23,17 @@ class TestCase
     # defined in the tests don't leak out to other tests.
     class << self
       def run_test
-        with_standard_output_to_logs do
-          @runtime = Benchmark.realtime do
-            begin
-              test = File.read(path)
-              eval test,nil,path,1
-            rescue Test::Unit::AssertionFailedError => e
-              @test_status = :fail
-              @exception   = e
-            rescue StandardError, ScriptError => e
-              e.backtrace.each { |line| Log.error(line) }
-              @test_status = :error
-              @exception   = e
-            end
+        @runtime = Benchmark.realtime do
+          begin
+            test = File.read(path)
+            eval test,nil,path,1
+          rescue Test::Unit::AssertionFailedError => e
+            @test_status = :fail
+            @exception   = e
+          rescue StandardError, ScriptError => e
+            e.backtrace.each { |line| Log.error(line) }
+            @test_status = :error
+            @exception   = e
           end
         end
         return self
@@ -100,7 +98,6 @@ class TestCase
       @result = command.exec(host, options)
 
       unless options[:silent] then
-        result.log
         if options[:acceptable_exit_codes].include?(exit_code)
           # cool.
         elsif options[:failing_exit_codes].include?(exit_code)
@@ -122,7 +119,6 @@ class TestCase
       host.each { |h| scp_to h,from_path,to_path,options }
     else
       @result = host.do_scp(from_path, to_path)
-      result.log
       raise "scp exited with #{result.exit_code}" if result.exit_code != 0
     end
   end

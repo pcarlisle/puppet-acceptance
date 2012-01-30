@@ -78,8 +78,19 @@ class TestCase
 
           channel.exec(command) do |terminal, success|
             abort "FAILED: to execute command on a new channel on #{@name}" unless success
-            terminal.on_data                   { |ch, data|       result.stdout << data }
-            terminal.on_extended_data          { |ch, type, data| result.stderr << data if type == 1 }
+
+            terminal.on_data do |ch, data|
+              result.stdout << data
+              Log.notify(data)
+            end
+
+            terminal.on_extended_data do |ch, type, data|
+              if type == 1
+                result.stderr << data
+                Log.warn(data)
+              end
+            end
+
             terminal.on_request("exit-status") { |ch, data|       result.exit_code = data.read_long  }
 
             # queue stdin data, force it to packets, and signal eof: this
@@ -87,7 +98,6 @@ class TestCase
             # 'puppet apply'.  It must be sent at some point before the rest
             # of the action.
             terminal.send_data(options[:stdin].to_s)
-            terminal.process
             terminal.eof!
           end
         end
