@@ -162,7 +162,6 @@ class TestCase
       host.each { |h| scp_to h, from_path, to_path, options }
     else
       @result = host.do_scp(from_path, to_path)
-      result.log
       raise "scp exited with #{result.exit_code}" if result.exit_code != 0
     end
   end

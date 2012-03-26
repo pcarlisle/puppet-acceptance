@@ -83,11 +83,13 @@ class Host
           terminal.on_data do |ch, data|
             result.stdout << data
             result.output << data
+            Log.notify(data)
           end
           terminal.on_extended_data do |ch, type, data|
             if type == 1
               result.stderr << data
               result.output << data
+              Log.notify(data)
             end
           end
           terminal.on_request("exit-status") { |ch, data|       result.exit_code = data.read_long  }
