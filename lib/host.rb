@@ -57,7 +57,10 @@ class Host
   def do_action(verb,*args)
     result = Result.new(self,args,'','',0)
     Log.debug "#{self}: #{verb}(#{args.inspect})"
+    start = Time.now
     yield result unless $dry_run
+    elapsed = Time.now - start
+    Log.debug "#{self}: #{verb} finished in #{elapsed}"
     result
   end
 
