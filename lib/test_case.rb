@@ -29,22 +29,20 @@ class TestCase
     # defined in the tests don't leak out to other tests.
     class << self
       def run_test
-        with_standard_output_to_logs do
-          @runtime = Benchmark.realtime do
-            begin
-              test = File.read(path)
-              eval test,nil,path,1
-            rescue Test::Unit::AssertionFailedError => e
-              @test_status = :fail
-              @exception   = e
-            rescue PendingTest
-              @test_status = :pending
-            rescue StandardError, ScriptError => e
-              Log.error(e.inspect)
-              e.backtrace.each { |line| Log.error(line) }
-              @test_status = :error
-              @exception   = e
-            end
+        @runtime = Benchmark.realtime do
+          begin
+            test = File.read(path)
+            eval test,nil,path,1
+          rescue Test::Unit::AssertionFailedError => e
+            @test_status = :fail
+            @exception   = e
+          rescue PendingTest
+            @test_status = :pending
+          rescue StandardError, ScriptError => e
+            Log.error(e.inspect)
+            e.backtrace.each { |line| Log.error(line) }
+            @test_status = :error
+            @exception   = e
           end
         end
         return self
@@ -60,26 +58,6 @@ class TestCase
       hash['HOSTS'][host.name] = host.overrides
     end
     hash
-  end
-
-  def with_standard_output_to_logs(&block)
-    stdout = ''
-    old_stdout = $stdout
-    $stdout = StringIO.new(stdout, 'w')
-
-    stderr = ''
-    old_stderr = $stderr
-    $stderr = StringIO.new(stderr, 'w')
-
-    result = yield if block_given?
-
-    $stdout = old_stdout
-    $stderr = old_stderr
-
-    stdout.each { |line| Log.notify(line) }
-    stderr.each { |line| Log.warn(line) }
-
-    return result
   end
 
   #
